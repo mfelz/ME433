@@ -32,7 +32,7 @@
 #pragma config FPLLMUL = MUL_20 // multiply clock after FPLLIDIV
 #pragma config UPLLIDIV = DIV_2 // divide clock after FPLLMUL
 #pragma config UPLLEN = ON // USB clock on
-#pragma config FPLLODIV = DIV_1 // divide clock by 1 to output on pin
+#pragma config FPLLODIV = DIV_2 // divide clock by 2 to output on pin
 
 // DEVCFG3
 #pragma config USERID = 0 // some 16bit userid
@@ -93,13 +93,17 @@ __builtin_enable_interrupts();
 //For an output function, use the RP(pin name)Rbits.RP(pin name)R to set the pin, using table 12-2 in Chapter 12
 
     // set up USER pin as input
-    TRISBbits.TRISB13 = 1; // make pin 7 an input
+    TRISBbits.TRISB13 = 1; // make pin 13 an input
     // set up LED1 pin as a digital output
-    TRISBbits.TRISB7 = 0;// make pin 13 an output
+    TRISBbits.TRISB7 = 0;// make pin 7 an output
     // set up LED2 as OC1 using Timer2 at 1kHz
     RPB15Rbits.RPB15R = 0b0101; // set B15 to OC1
-    PR2 = 3999; // 3999 = 1000 us, 1 kHz
+    T2CONbits.TCKPS = 2; // Timer2 prescaler N=4 (1:4)
+    PR2 = 19999; // period = (PR2+1) * N * 12.5 ns = 1000 us, 1 kHz
     TMR2 = 0; // initial TMR2 count is 0
+    OC1RS = 10000;
+    OC1CONbits.OCTSEL = 0; // use Timer2 for OC1
+    OC1CONbits.OCM = 0b110; // PWM mode with fault pin disabled
     T2CONbits.ON = 1; // turn on Timer2
     OC1CONbits.ON = 1; // turn on OC1
 
@@ -113,18 +117,18 @@ __builtin_enable_interrupts();
     int val;
     while (1) {
         _CP0_SET_COUNT(0); // set core timer to 0, remember it counts at half the CPU clock
-        LATBINV = 0x80; // invert a pin
-   
+        LATBINV = 0b010000000; // invert a pin
+
 
         // wait for half a second, setting LED brightness to pot angle while waiting
         while (_CP0_GET_COUNT() < 20000000) {
             val = readADC();
-            OC1RS = val * 3999/3.3;
+            OC1RS = val * 19999/1023;
 
             if (PORTBbits.RB13 == 1) {
                 // nothing
             } else {
-                LATBINV = 0x80;
+                LATBINV = 0b010000000;
             }
         }
     }
