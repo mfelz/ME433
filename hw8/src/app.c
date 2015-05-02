@@ -202,8 +202,8 @@ void APP_USBDeviceEventHandler(USB_DEVICE_EVENT event, void * eventData, uintptr
             USB_DEVICE_HID_EventHandlerSet(USB_DEVICE_HID_INDEX_0, APP_USBDeviceHIDEventHandler, (uintptr_t)&appData);
 
             /* Update the LEDs */
-            BSP_LEDOff (APP_USB_LED_7);
-            BSP_LEDOff (APP_USB_LED_15);
+            BSP_LEDOn (APP_USB_LED_7);
+            BSP_LEDOn (APP_USB_LED_15);
             //BSP_LEDOn  (APP_USB_LED_3);
 
             break;
@@ -308,7 +308,7 @@ void APP_Tasks (void )
     char temp[256]="";
     short accels[3]; // 0 = X, 1 = Y, 2 = Z
 
-    acc_read_register(OUT_X_L_A, (unsigned char *) accels,6);
+    
 
 
 
@@ -393,24 +393,40 @@ void APP_Tasks (void )
                         break;
 
                     case 0x81:
+                                
 
                         if(appData.hidDataTransmitted)
                         {
                             /* Echo back to the host PC the command we are fulfilling in
                              * the first byte.  In this case, the Get Push-button State
                              * command. */
-                       
                             _CP0_SET_COUNT(0);
-                            int elapsed = 0;
-                            elapsed =  _CP0_GET_COUNT();
-                            if (elapsed > 2000000){
+                            int elapsed = _CP0_GET_COUNT();
+                            if (elapsed < 2000000){
+                                acc_read_register(OUT_X_L_A, (unsigned char *) accels,6);
+                            
                                 appData.transmitDataBuffer[0] = 0x81;
-                                appData.transmitDataBuffer[2] = accels[0];
-                                appData.transmitDataBuffer[3] = accels[1];
-                                appData.transmitDataBuffer[4] = accels[2];
+
+                                appData.transmitDataBuffer[2] = (accels[0] >> 8) & 0xFF;
+                                appData.transmitDataBuffer[3] = (accels[0] & 0xFF);
+
+                                appData.transmitDataBuffer[4] = (accels[1] >> 8) & 0xFF;
+                                appData.transmitDataBuffer[5] =  accels[1] & 0xFF;
+
+                                appData.transmitDataBuffer[6] = (accels[2] >> 8) & 0xFF;
+                                appData.transmitDataBuffer[7] = accels[2] & 0xFF;
+
+
                                 _CP0_SET_COUNT(0);
                             }
-
+                            else {
+                               appData.transmitDataBuffer[2] = 0x00;
+                               appData.transmitDataBuffer[3] = 0x00;
+                               appData.transmitDataBuffer[4] = 0x00;
+                               appData.transmitDataBuffer[5] = 0x00;
+                               appData.transmitDataBuffer[6] = 0x00;
+                               appData.transmitDataBuffer[7] = 0x00;
+                            }
                             if( BSP_SwitchStateGet(APP_USB_SWITCH_1) == BSP_SWITCH_STATE_PRESSED )
                             {
                                 appData.transmitDataBuffer[1] = 0x00;
