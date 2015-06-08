@@ -481,14 +481,15 @@ USB_DEVICE_CDC_RESULT writeRequestResult;
 
                 //compare curent and previous values if different within tolerance
                 //turn left or right
-                if(COM < 320-2*640/5){
+                if(COM < 280){
                     turnLeft();
                 }
-                if(COM > 320+2*640/5 ){
+                if(COM > 360 ){
                     turnRight();
                 }
                 else{
-                    straight();
+                    OC1RS = 15000;
+                    OC2RS = 15000;
                 }
 
 
@@ -542,30 +543,33 @@ USB_DEVICE_CDC_RESULT writeRequestResult;
 
 void turnLeft ( void ) {
 //    _CP0_SET_COUNT(0);
-    while(_CP0_GET_COUNT()<10000000) {
-        OC1RS = 15000;
-        OC2RS = 15000;
-    }
+//    while(_CP0_GET_COUNT()<10000000) {
+//        OC1RS = 15000;
+//        OC2RS = 15000;
+//    }
     _CP0_SET_COUNT(0);
     while(_CP0_GET_COUNT()<4000000) {
         OC1RS = 15000;
         OC2RS = 5000;
     }
-    
+    OC1RS = 15000;
+    OC2RS = 15000;
 }
 
 void turnRight ( void ) {
     //OC1 is right wheel
-    _CP0_SET_COUNT(0);
-    while(_CP0_GET_COUNT()<10000000) {
-        OC1RS = 15000;
-        OC2RS = 15000;
-    }
+//    _CP0_SET_COUNT(0);
+//    while(_CP0_GET_COUNT()<10000000) {
+//        OC1RS = 15000;
+//        OC2RS = 15000;
+//    }
     _CP0_SET_COUNT(0);
     while(_CP0_GET_COUNT()<8000000) {
         OC1RS = 5000;
         OC2RS = 15000;
     }
+    OC1RS = 15000;
+    OC2RS = 15000;
     
 
 }
